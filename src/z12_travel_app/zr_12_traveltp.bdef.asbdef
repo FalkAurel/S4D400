@@ -1,0 +1,61 @@
+managed implementation in class zbp_12_travel unique;
+strict ( 2 );
+
+/* Behaviour Defintion for Root Entity Travel */
+define behavior for ZR_12_TravelTP alias Travel
+persistent table /dmo/travel
+lock master
+authorization master ( instance )
+//etag master <field_name>
+{
+  create ( authorization : global );
+  update;
+  delete;
+  field ( mandatory : create ) AgencyId, BeginDate, CustomerId, Description, EndDate, TravelId;
+  field ( readonly: update ) AgencyId, BeginDate, CustomerId, Description, EndDate;
+  field ( readonly ) Status, CreatedAt, CreatedBy, LastChangedAt, LastChangedBy;
+  association _Bookings { create; }
+
+
+  validation ValidateCustomer on save { create; }
+  determination DetermineStatus on save { create; }
+  action CancelTravel;//result [1] $self;
+
+  mapping for /dmo/travel corresponding
+    {
+      AgencyId     = agency_id;
+      BeginDate    = begin_date;
+      BookingFee   = booking_fee;
+      CurrencyCode = currency_code;
+      EndDate      = end_date;
+      TotalPrice   = total_price;
+      TravelId     = travel_id;
+    }
+}
+
+
+/* Behaviour Defintion for Child Entity Booking */
+define behavior for ZR_12_Booking alias Booking
+persistent table /dmo/booking
+lock dependent by _Travels
+authorization dependent by _Travels
+//etag master <field_name>
+{
+  update;
+  delete;
+  field ( readonly ) TravelId, BookingId;
+  association _Travels;
+
+  mapping for /dmo/booking corresponding
+    {
+      BookingDate  = booking_date;
+      BookingId    = booking_id;
+      CarrierId    = carrier_id;
+      ConnectionId = connection_id;
+      CurrencyCode = currency_code;
+      CustomerId   = customer_id;
+      FlightDate   = flight_date;
+      FlightPrice  = flight_price;
+      TravelId     = travel_id;
+    }
+}
